@@ -1,6 +1,11 @@
 import type { Venue, VenueListResponse, VenueFilters, CreateBookingInput, BookingInquiry } from "@/types";
 
 function getBaseUrl(): string {
+  // Client-side: use relative URL
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  // Server-side: need absolute URL
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
