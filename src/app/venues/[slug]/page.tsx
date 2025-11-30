@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Users, ArrowLeft, Check } from "lucide-react";
-import { api } from "@/lib/api";
+import { venueService } from "@/services/venue.service";
 import { formatPrice } from "@/lib/utils";
 
 interface PageProps {
@@ -15,9 +15,11 @@ interface PageProps {
 
 export default async function VenueDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const venue = await api.venues.getBySlug(slug);
 
-  if (!venue) {
+  let venue;
+  try {
+    venue = await venueService.getVenueBySlug(slug);
+  } catch {
     notFound();
   }
 

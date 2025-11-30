@@ -3,7 +3,7 @@ import { VenueFilters } from "@/components/venue-filters";
 import { VenueList } from "@/components/venue-list";
 import { Pagination } from "@/components/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/lib/api";
+import { venueService } from "@/services/venue.service";
 
 interface SearchParams {
   search?: string;
@@ -32,7 +32,7 @@ function VenueListSkeleton() {
 }
 
 async function VenueListWrapper({ searchParams }: { searchParams: SearchParams }) {
-  const { data: venues, pagination } = await api.venues.list({
+  const { data: venues, pagination } = await venueService.getVenues({
     search: searchParams.search,
     minCapacity: searchParams.minCapacity ? Number(searchParams.minCapacity) : undefined,
     maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
