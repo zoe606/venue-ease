@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Venue {
+  id            Int      @id @default(autoincrement())
+  slug          String   @unique
+  name          String
+  city          String
+  address       String
+  capacity      Int
+  pricePerNight Decimal  @map("price_per_night") @db.Decimal(10, 2)
+  description   String?
+  imageUrl      String?  @map("image_url")
+  amenities     String[] @default([])
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  bookingInquiries BookingInquiry[]
+
+  @@index([city])
+  @@index([capacity])
+  @@index([pricePerNight])
+  @@map("venues")
+}
+
+model BookingInquiry {
+  id                  Int      @id @default(autoincrement())
+  venueId             Int      @map("venue_id")
+  companyName         String   @map("company_name")
+  email               String
+  startDate           DateTime @map("start_date") @db.Date
+  endDate             DateTime @map("end_date") @db.Date
+  attendeeCount       Int      @map("attendee_count")
+  quotedPricePerNight Decimal  @map("quoted_price_per_night") @db.Decimal(10, 2)
+  status              String   @default("pending")
+  message             String?
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
+  @@index([startDate, endDate])
+  @@map("booking_inquiries")
+}
