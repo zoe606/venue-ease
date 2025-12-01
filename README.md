@@ -158,56 +158,17 @@ Submit a booking inquiry.
 
 **Response:** `201 Created`
 
-## Design Decisions & Tradeoffs
+## Design Decisions
 
-### 1. Layered Architecture (Route → Service → Repository)
+**Layered architecture** — Routes are thin controllers that validate input and delegate to services. Services contain business logic and throw typed errors. Repositories handle data access. This adds more files but makes testing straightforward (mock the repository, test the service).
 
-**Why:** Clear separation of concerns. Routes handle HTTP, services contain business logic, repositories abstract data access. Easy to test services in isolation by mocking repositories.
+**App-level availability check** — Overlap detection happens in the service layer rather than using PostgreSQL EXCLUDE constraints. Since bookings go to "pending" status for human review, the race condition window is acceptable. For auto-confirmed high-traffic inventory (concert tickets, etc.), I'd add DB-level constraints.
 
-**Tradeoff:** More files than putting everything in route handlers. Worth it for maintainability.
+**URL-based filters** — Search params live in the URL so results are shareable and browser navigation works. Adds state management complexity but better UX.
 
-### 2. App-Level Availability Check (Not DB-Level)
+**Slug URLs** — `/venues/grand-ballroom-sf` instead of `/venues/1`. More readable, better for SEO.
 
-**Why:** The current overlap detection happens in the service layer:
-
-```typescript
-const conflicts = await bookingRepository.findOverlapping(venueId, startDate, endDate);
-if (conflicts.length > 0) throw new AppError(DATES_UNAVAILABLE, ...);
-```
-
-**This is appropriate because:**
-
-- Bookings go to "pending" status, not auto-confirmed
-- Low probability of exact same venue + dates + millisecond collision
-- Simpler to debug than DB constraints
-
-**When need DB-level EXCLUDE constraint:**
-
-- Auto-confirmed bookings (no human review)
-- High-value inventory (concert tickets, airline seats)
-- Thousands of concurrent users on same inventory
-
-### 3. URL-Based Filter State
-
-**Why:** Filters stored in URL (`?search=SF&minCapacity=100&page=2`) enables:
-
-- Shareable/bookmarkable search results
-- Browser back/forward navigation works
-- Server-side rendering with filters
-
-**Tradeoff:** More complex state management than local state.
-
-### 4. Slug-Based URLs
-
-**Why:** `/venues/grand-ballroom-san-francisco` is more readable and SEO-friendly than `/venues/1`.
-
-**Tradeoff:** Requires unique slug generation and lookup by slug instead of ID.
-
-### 5. Price Locking at Inquiry Time
-
-**Why:** `quotedPricePerNight` captures the price when the booking is created. If venue prices change later, the original quote is preserved.
-
-**Tradeoff:** Extra column, but prevents pricing disputes.
+**Price locking** — `quotedPricePerNight` captures the price at inquiry time. If venue prices change later, the original quote is preserved.
 
 ## Next Improvement
 

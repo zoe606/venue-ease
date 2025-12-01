@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { venueService } from "./venue.service";
 import { venueRepository } from "@/repositories/venue.repository";
-import { AppError, ErrorCodes } from "@/lib/errors";
+import { ErrorCodes } from "@/lib/errors";
 import { createMockVenue } from "@/test/mocks";
 
 vi.mock("@/repositories/venue.repository", () => ({
@@ -88,15 +88,12 @@ describe("venueService", () => {
     it("throws VENUE_NOT_FOUND when venue does not exist", async () => {
       vi.mocked(venueRepository.findBySlug).mockResolvedValue(null);
 
-      await expect(venueService.getVenueBySlug("nonexistent")).rejects.toThrow(AppError);
-
-      try {
-        await venueService.getVenueBySlug("nonexistent");
-      } catch (error) {
-        expect(error).toBeInstanceOf(AppError);
-        expect((error as AppError).code).toBe(ErrorCodes.VENUE_NOT_FOUND);
-        expect((error as AppError).statusCode).toBe(404);
-      }
+      await expect(
+        venueService.getVenueBySlug("nonexistent"),
+      ).rejects.toMatchObject({
+        code: ErrorCodes.VENUE_NOT_FOUND,
+        statusCode: 404,
+      });
     });
   });
 });

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { startOfDay, parseISO } from "date-fns";
 
 // Venue filter schema
 export const venueFiltersSchema = z.object({
@@ -23,18 +24,12 @@ export const createBookingSchema = z
     message: z.string().max(1000).optional(),
   })
   .refine(
-    (data) => new Date(data.startDate) >= new Date(new Date().toDateString()),
-    {
-      message: "Start date cannot be in the past",
-      path: ["startDate"],
-    }
+    (data) => parseISO(data.startDate) >= startOfDay(new Date()),
+    { message: "Start date cannot be in the past", path: ["startDate"] }
   )
   .refine(
-    (data) => new Date(data.endDate) > new Date(data.startDate),
-    {
-      message: "End date must be after start date",
-      path: ["endDate"],
-    }
+    (data) => parseISO(data.endDate) > parseISO(data.startDate),
+    { message: "End date must be after start date", path: ["endDate"] }
   );
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
